@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+    <head>
+        <!-- HTMX -->
+        <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+        <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/debug.js"></script>
+        <!-- Tailwind -->
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <!-- Material Icons -->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Langflow Chat</title>
+    </head>
+    <body class="bg-slate-900 text-white">
+        <div class="flex flex-col w-full items-center">
+            <ul id="chat-list" class="w-3/10 p-8 flow-root">
+            </ul>
+        </div>
+        <div class="w-full grid grid-cols-10">
+            <div class="col-span-4 col-start-4 flex flex-col items-center">
+                <form
+                    class="w-full bg-gray-700 p-4 rounded-xl"
+                    hx-post="/chat"
+                    hx-target="#chat-list"
+                    hx-swap="beforeend">
+                    <div><input type="text" class="float-left my-2 w-full" name="message" placeholder="Type your message" required></div>
+                    <br/>
+                    <div><button class="float-right" type="submit"><i class="material-icons cursor-pointer">send</i></button></div>
+                </form>
+                <form
+                    hx-post="/upload"
+                    hx-encoding="multipart/form-data"
+                    hx-target="#response"
+                    hx-ext="debug"
+                    hx-swap="innerHTML">
+                    <input type="file" name="png" accept="image/png" required>
+                    <button type="submit">Upload Image</button>
+                </form>
+                <div id="response">Placeholder</div>
+            </div>
+        </div>
+    </body>
+</html>
