@@ -29,7 +29,7 @@ func main() {
 
     r.HandleFunc("/", serveIndex)
     r.HandleFunc("/clicked", buttonClick)
-    r.HandleFunc("/chat", chatResponse)
+    r.HandleFunc("/chat", chatHandler)
     r.HandleFunc("/upload", uploadFile)
     //http.HandleFunc("/ws", nil)
 
@@ -58,6 +58,42 @@ func chatResponse(w http.ResponseWriter, r *http.Request) {
 
     data := map[string]string{"message": message}
     tmpl.ExecuteTemplate(w, "chatResponse.html", data)
+}
+
+func chatHandler(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseMultipartForm(100 << 20)
+    if err != nil {
+	log.Println("File too large")
+	http.Error(w, "File too large", http.StatusBadRequest)
+	return
+    }
+
+    message := r.FormValue("message")
+
+    file, handler, err := r.FormFile("png")
+    if err != nil {
+	log.Println("Invalid file")
+	http.Error(w, "Invalid file", http.StatusBadRequest)
+    }
+    defer file.Close()
+
+    data := map[string]string{"message": message}
+    err = tmpl.ExecuteTemplate(w, "chatResponse.html", data)
+    if err != nil {
+	log.Printf("Error with template: %v\n", err)
+	return
+    }
+}
+
+func uploadLangflowFile(file multipart.File, handler *multipart.FileHeader) error {
+    var buf bytes.Buffer
+    writer := multipart.NewWriter(&buf)
+
+    part, err := writer.CreateFormFile("file", handler.Filename)
+    if err != nil {
+	log.Println("Failed to create form file")
+	return err
+    }
 }
 
 type UploadResp struct{
