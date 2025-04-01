@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/html"
 	"github.com/gomarkdown/markdown/parser"
+	"github.com/joho/godotenv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -23,6 +25,10 @@ import (
 var tmpl *template.Template
 
 func main() {
+    err := godotenv.Load()
+    if err != nil {
+	log.Fatal("Error loading .env file")
+    }
 
     tmpl, _ = template.ParseGlob("templates/*.html")
 
@@ -133,8 +139,10 @@ func uploadLangflowFile(w http.ResponseWriter, file multipart.File, handler *mul
     io.Copy(part, file)
     writer.Close()
 
+    flowID := os.Getenv("FLOW_ID")
+
     log.Println("Sending file to Langflow")
-    uploadURL := "http://localhost:7860/api/v1/files/upload/37377164-c4e0-40c5-9a7f-872f3931349d?stream=false"
+    uploadURL := "http://localhost:7860/api/v1/files/upload/" + flowID + "?stream=false"
     req, err := http.NewRequest("POST", uploadURL, &buf)
     if err != nil {
 	return nil, err
@@ -170,9 +178,11 @@ type UploadResp struct{
 
 func sendChatToLangflow(message string, filePath string) (string, error) {
 
-    componentId := "ChatInput-XNOtH"
+    chatInputID := os.Getenv("CHAT_INPUT_ID")
+
+    componentId := chatInputID
     requestBody := map[string]any{
-	"session_id": "chat-123",
+	//"session_id": "chat-123",
 	"input_value": message,
 	"output_type": "chat",
 	"input_type": "chat",
@@ -188,7 +198,8 @@ func sendChatToLangflow(message string, filePath string) (string, error) {
 	return "", err
     }
 
-    apiURL := "http://localhost:7860/api/v1/run/37377164-c4e0-40c5-9a7f-872f3931349d?stream=false"
+    flowID := os.Getenv("FLOW_ID")
+    apiURL := "http://localhost:7860/api/v1/run/" + flowID + "?stream=false"
 
     req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonData))
     if err != nil {
